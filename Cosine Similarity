@@ -1,0 +1,78 @@
+import nltk
+import math
+d1="""to do is to be to be is to do"""
+d2="""to be or not to be i am what i am"""
+d3="""i think therefore i am do be do be do"""
+d4="""do do do da da da let it be let it be"""
+query="""to do"""
+def freq(word,tokens):
+ return tokens.count(word)
+
+def word_count(tokens):
+ return len(tokens)
+
+def tf(word, tokens):
+ if freq(word, tokens) > 0:
+  tf=math.log(freq(word, tokens),2.0)+1
+ else:
+  tf=0
+ return tf
+
+def num_docs_containing(word, list_of_docs):
+ count = 0
+ for document in list_of_docs:
+  if freq(word, document) > 0:
+   count += 1
+ return count
+
+
+def idf(word, list_of_docs):
+ return math.log(len(list_of_docs) /
+  float(num_docs_containing(word, list_of_docs)),2.0)
+
+def tf_idf(word, doc, list_of_docs):
+ return (tf(word, doc) * idf(word, list_of_docs))
+
+def cosine_similarity(v1,v2):
+    "compute cosine similarity of v1 to v2: (v1 dot v2)/{||v1||*||v2||)"
+    sumxx, sumxy, sumyy = 0, 0, 0
+    for i in range(len(v1)):
+        x = v1[i]; y = v2[i]
+        sumxx += x*x
+        sumyy += y*y
+        sumxy += x*y
+    return sumxy/math.sqrt(sumxx*sumyy)
+
+vocabulary = [d1,d2,d3,d4,query]
+docs={}
+tokens=[]
+final_tokens = []
+
+for doc in vocabulary:
+ tokens=nltk.word_tokenize(doc)
+ final_tokens+=tokens
+ 
+final_tokens=set(final_tokens)
+print final_tokens
+
+
+for doc in vocabulary:
+ docs[doc]={'freq':{},'tf':{}, 'idf': {},'tf-idf': {},'ni':{}}
+ tokens=nltk.word_tokenize(doc)
+ for token in final_tokens:
+  docs[doc]['freq'][token]=freq(token,tokens)
+  docs[doc]['tf'][token]=tf(token,tokens)
+  docs[doc]['ni'][token]=num_docs_containing(token,vocabulary)
+ 
+for doc in docs:
+ tokens=nltk.word_tokenize(doc)
+ for token in final_tokens:
+  docs[doc]['idf'][token] = idf(token, vocabulary)
+  docs[doc]['tf-idf'][token] = tf_idf(token, tokens, vocabulary)
+
+for doc in docs:
+ docs[doc]['CS']=cosine_similarity(docs['to do']['tf-idf'].values(),docs[doc]['tf-idf'].values())
+ print docs[doc]['CS']
+
+
+#print docs
